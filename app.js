@@ -10,9 +10,6 @@ const cropCtx = cropCanvas.getContext('2d');
 const previewCanvas = document.getElementById('previewCanvas');
 const previewCtx = previewCanvas.getContext('2d');
 const previewZoomWrap = document.getElementById('previewZoomWrap');
-const sizePreset = document.getElementById('sizePreset');
-const outWInput = document.getElementById('outW');
-const outHInput = document.getElementById('outH');
 const bgColorInput = document.getElementById('bgColor');
 const resetCropBtn = document.getElementById('resetCrop');
 const applyCropAllBtn = document.getElementById('applyCropAll');
@@ -34,8 +31,8 @@ const state = {
   items: [],
   selectedId: null,
   output: {
-    w: 1280,
-    h: 720,
+    w: 1920,
+    h: 1080,
     bg: '#0b0f1a',
   },
   drag: null,
@@ -793,70 +790,46 @@ applyCropAllBtn.addEventListener('click', () => {
   render();
 });
 
-sizePreset.addEventListener('change', () => {
-  const val = sizePreset.value;
-  if (val !== 'custom') {
-    const [w, h] = val.split('x').map(Number);
-    outWInput.value = w;
-    outHInput.value = h;
-  }
-  applyOutputSize();
-});
-
-[outWInput, outHInput].forEach(input => {
-  input.addEventListener('change', () => {
-    sizePreset.value = 'custom';
-    applyOutputSize();
-  });
-});
-
 bgColorInput.addEventListener('change', () => {
   state.output.bg = bgColorInput.value;
   render();
 });
 
-function applyOutputSize() {
-  const w = parseInt(outWInput.value, 10);
-  const h = parseInt(outHInput.value, 10);
-  if (!Number.isFinite(w) || !Number.isFinite(h) || w < 10 || h < 10) return;
-  const prevW = state.output.w;
-  const prevH = state.output.h;
-  state.output.w = w;
-  state.output.h = h;
-  resetAllCrops();
-  scaleAllHotspots(prevW, prevH, w, h);
-  resizeCropCanvas();
-  updatePreviewScale();
-  render();
-}
-
 async function exportHTML() {
   if (!state.items.length) return;
-  const outW = state.output.w;
-  const outH = state.output.h;
+  const exportW = 1920;
+  const exportH = 1080;
   const bg = state.output.bg;
+  const scaleX = exportW / state.output.w;
+  const scaleY = exportH / state.output.h;
 
   const encodedImages = [];
   const tempCanvas = document.createElement('canvas');
   const tempCtx = tempCanvas.getContext('2d');
-  tempCanvas.width = outW;
-  tempCanvas.height = outH;
+  tempCanvas.width = exportW;
+  tempCanvas.height = exportH;
 
   for (const item of state.items) {
     tempCtx.fillStyle = bg;
-    tempCtx.fillRect(0, 0, outW, outH);
+    tempCtx.fillRect(0, 0, exportW, exportH);
     const c = item.crop;
-    tempCtx.drawImage(item.img, c.x, c.y, c.w, c.h, 0, 0, outW, outH);
+    tempCtx.drawImage(item.img, c.x, c.y, c.w, c.h, 0, 0, exportW, exportH);
     const dataUrl = tempCanvas.toDataURL('image/png');
     encodedImages.push({
       id: item.id,
       name: item.name,
       dataUrl,
-      hotspots: item.hotspots || [],
+      hotspots: (item.hotspots || []).map(h => ({
+        ...h,
+        x: h.x * scaleX,
+        y: h.y * scaleY,
+        w: h.w * scaleX,
+        h: h.h * scaleY,
+      })),
     });
   }
 
-  const html = buildExportHTML(encodedImages, outW, outH, bg);
+  const html = buildExportHTML(encodedImages, exportW, exportH, bg);
   await saveTextFile(html, 'mock_export.html', 'text/html');
 }
 
@@ -904,15 +877,37 @@ function buildExportHTML(items, outW, outH, bg) {
       font-family: 'Segoe UI', sans-serif;
       background: ${bg};
       color: #f4f4f4;
-      display: grid;
-      grid-template-columns: 280px 1fr;
       min-height: 100vh;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 100vh;
+    }
+    .layout.open {
+      grid-template-columns: 280px 1fr;
+    }
+    .toggle {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 10;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      cursor: pointer;
     }
     aside {
       border-right: 1px solid rgba(255,255,255,0.1);
       padding: 16px;
       overflow-y: auto;
       background: rgba(0,0,0,0.2);
+      display: none;
+    }
+    .layout.open aside {
+      display: block;
     }
     main {
       display: grid;
@@ -922,8 +917,18 @@ function buildExportHTML(items, outW, outH, bg) {
     .viewer {
       max-width: 100%;
       position: relative;
-      width: min(100%, ${outW}px);
+      width: min(100vw, calc(100vh * ${outW / outH}), ${outW}px);
       aspect-ratio: ${outW} / ${outH};
+    }
+    .layout.open .viewer {
+      width: min(calc(100vw - 360px), calc(100vh * ${outW / outH}), ${outW * 0.85}px);
+    }
+    .layout:not(.open) main {
+      padding: 24px;
+    }
+    .layout:not(.open) .viewer {
+      width: min(calc(100vw - 48px), calc(100vh * ${outW / outH}), ${outW * 0.92}px);
+      max-width: 100%;
     }
     .viewer img {
       position: absolute;
@@ -972,20 +977,25 @@ function buildExportHTML(items, outW, outH, bg) {
   </style>
 </head>
 <body>
-  <aside>
-    ${listItems}
-  </aside>
-  <main>
-    <div class="viewer">
-      <img id="mainImage" src="${first.dataUrl}" alt="${first.name}" />
-      <div id="hotspotLayer" class="hotspot-layer"></div>
-    </div>
-  </main>
+  <button id="toggleList" class="toggle">リスト</button>
+  <div id="layout" class="layout">
+    <aside>
+      ${listItems}
+    </aside>
+    <main>
+      <div class="viewer">
+        <img id="mainImage" src="${first.dataUrl}" alt="${first.name}" />
+        <div id="hotspotLayer" class="hotspot-layer"></div>
+      </div>
+    </main>
+  </div>
   <script>
     const items = ${JSON.stringify(itemsWithTargets)};
     const buttons = Array.from(document.querySelectorAll('.thumb'));
     const mainImage = document.getElementById('mainImage');
     const hotspotLayer = document.getElementById('hotspotLayer');
+    const layout = document.getElementById('layout');
+    const toggleList = document.getElementById('toggleList');
 
     function renderHotspots(idx) {
       hotspotLayer.innerHTML = '';
@@ -1022,6 +1032,9 @@ function buildExportHTML(items, outW, outH, bg) {
       buttons[0].classList.add('active');
       renderHotspots(0);
     }
+    toggleList.addEventListener('click', () => {
+      layout.classList.toggle('open');
+    });
   </script>
 </body>
 </html>`;
@@ -1087,9 +1100,7 @@ async function loadProjectFile(file) {
   state.items = [];
   state.selectedId = null;
   if (data.output) {
-    state.output = { ...state.output, ...data.output };
-    outWInput.value = state.output.w;
-    outHInput.value = state.output.h;
+    state.output.bg = data.output.bg || state.output.bg;
     bgColorInput.value = state.output.bg;
   }
   for (const src of data.items) {
@@ -1143,20 +1154,6 @@ function resetAllCrops() {
   });
 }
 
-function scaleAllHotspots(prevW, prevH, nextW, nextH) {
-  if (!prevW || !prevH) return;
-  const sx = nextW / prevW;
-  const sy = nextH / prevH;
-  state.items.forEach(item => {
-    item.hotspots = (item.hotspots || []).map(h => ({
-      ...h,
-      x: h.x * sx,
-      y: h.y * sy,
-      w: h.w * sx,
-      h: h.h * sy,
-    }));
-  });
-}
 
 resizeCropCanvas();
 window.addEventListener('load', () => {
