@@ -1058,9 +1058,10 @@ async function saveProject() {
 async function saveTextFile(text, suggestedName, mime) {
   if (window.showSaveFilePicker) {
     try {
+      const ext = '.' + suggestedName.split('.').pop();
       const handle = await window.showSaveFilePicker({
         suggestedName,
-        types: [{ description: mime, accept: { [mime]: [suggestedName.split('.').pop()] } }],
+        types: [{ description: mime, accept: { [mime]: [ext] } }],
       });
       const writable = await handle.createWritable();
       await writable.write(text);
