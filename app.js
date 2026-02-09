@@ -1044,22 +1044,12 @@ exportBtn.addEventListener('click', exportHTML);
 
 async function saveProject() {
   if (!state.items.length) return;
-  for (const item of state.items) {
-    if (!item.dataUrl && item.file) {
-      try {
-        item.dataUrl = await fileToDataUrl(item.file);
-      } catch {
-        item.dataUrl = item.url;
-      }
-    }
-  }
   const payload = {
     version: 1,
     output: { ...state.output },
       items: state.items.map(item => ({
         id: item.id,
         name: item.name,
-        dataUrl: item.dataUrl || item.url,
         crop: item.crop,
         hotspots: item.hotspots || [],
       })),
@@ -1103,18 +1093,22 @@ async function loadProjectFile(file) {
     state.output.bg = data.output.bg || state.output.bg;
     bgColorInput.value = state.output.bg;
   }
+  const resolvedFiles = await resolveProjectImageFiles(data.items);
   for (const src of data.items) {
-    if (!src.dataUrl) continue;
+    const fileEntry = resolvedFiles.get(src.name || '');
+    const dataUrl = src.dataUrl || (fileEntry ? await fileToDataUrl(fileEntry) : null);
+    if (!dataUrl) continue;
     const img = new Image();
     await new Promise(resolve => {
       img.onload = resolve;
-      img.src = src.dataUrl;
+      img.src = dataUrl;
     });
     const item = {
       id: src.id || crypto.randomUUID(),
-      name: src.name || 'image',
-      url: src.dataUrl,
-      dataUrl: src.dataUrl,
+      name: src.name || fileEntry?.name || 'image',
+      file: fileEntry || null,
+      url: dataUrl,
+      dataUrl,
       img,
       crop: src.crop || { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight },
       hotspots: src.hotspots || [],
@@ -1154,6 +1148,73 @@ function resetAllCrops() {
   });
 }
 
+async function resolveProjectImageFiles(items) {
+  const needsResolve = items.some(src => !src.dataUrl);
+  const map = new Map();
+  if (!needsResolve) return map;
+
+  const files = await pickImageDirectoryFiles();
+  if (!files.length) return map;
+
+  files.forEach(file => {
+    if (!map.has(file.name)) {
+      map.set(file.name, file);
+    }
+  });
+
+  const missing = items
+    .map(src => src.name)
+    .filter(name => name && !map.has(name));
+  if (missing.length) {
+    alert(`一部の画像が見つかりませんでした。\\n見つからない: ${missing.slice(0, 6).join(', ')}${missing.length > 6 ? ' …' : ''}`);
+  }
+  return map;
+}
+
+async function pickImageDirectoryFiles() {
+  if (window.showDirectoryPicker) {
+    try {
+      const dir = await window.showDirectoryPicker();
+      const collected = [];
+      await collectFilesFromHandle(dir, collected);
+      return collected.filter(f => f.type.startsWith('image/'));
+    } catch (err) {
+      if (err && err.name === 'AbortError') return [];
+    }
+  }
+  return await pickFilesWithDirectoryInput();
+}
+
+async function collectFilesFromHandle(handle, out) {
+  if (handle.kind === 'file') {
+    const file = await handle.getFile();
+    out.push(file);
+    return;
+  }
+  for await (const entry of handle.values()) {
+    if (entry.kind === 'file') {
+      const file = await entry.getFile();
+      out.push(file);
+    } else if (entry.kind === 'directory') {
+      await collectFilesFromHandle(entry, out);
+    }
+  }
+}
+
+function pickFilesWithDirectoryInput() {
+  return new Promise(resolve => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.setAttribute('webkitdirectory', '');
+    input.accept = 'image/*';
+    input.addEventListener('change', () => {
+      const files = Array.from(input.files || []).filter(f => f.type.startsWith('image/'));
+      resolve(files);
+    });
+    input.click();
+  });
+}
 
 resizeCropCanvas();
 window.addEventListener('load', () => {
