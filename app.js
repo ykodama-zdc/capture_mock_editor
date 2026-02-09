@@ -303,9 +303,13 @@ function updatePreviewScale() {
   const innerW = Math.max(0, rect.width - padX);
   const innerH = Math.max(0, rect.height - padY);
   const scale = Math.min(innerW / outW, innerH / outH);
+  const scaledW = outW * scale;
+  const scaledH = outH * scale;
+  const offsetX = (innerW - scaledW) / 2 + parseFloat(style.paddingLeft);
+  const offsetY = (innerH - scaledH) / 2 + parseFloat(style.paddingTop);
   previewZoomWrap.style.width = `${outW}px`;
   previewZoomWrap.style.height = `${outH}px`;
-  previewZoomWrap.style.transform = `scale(${scale})`;
+  previewZoomWrap.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
 }
 
 function hitTestHotspot(mx, my, item) {
@@ -632,7 +636,6 @@ function setMode(mode) {
     centerPanel.classList.toggle('mode-hotspot', !isCrop);
   }
   cropStage.classList.toggle('stage-hidden', !isCrop);
-  previewStage.classList.toggle('stage-hidden', isCrop);
   cropControls.classList.toggle('stage-hidden', !isCrop);
   hotspotControls.classList.toggle('stage-hidden', isCrop);
   modeCropBtn.classList.toggle('primary', isCrop);

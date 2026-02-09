@@ -223,6 +223,15 @@ button {
   max-height: 450px;
 }
 
+.panel.center.mode-hotspot .stage-stack {
+  grid-template-rows: 1fr;
+}
+
+.panel.center.mode-hotspot .preview-stage {
+  height: 100%;
+  max-height: none;
+}
+
 .panel-header {
   display: flex;
   align-items: baseline;
@@ -391,14 +400,16 @@ button {
   border-radius: 16px;
   border: 1px solid var(--stroke);
   padding: 12px;
-  display: grid;
-  place-items: center;
+  position: relative;
   min-height: 0;
   overflow: hidden;
 }
 
 .preview-zoom {
   transform-origin: top left;
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
 .preview-stage canvas {
