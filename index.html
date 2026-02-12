@@ -21,6 +21,10 @@
     </div>
     <div class="actions">
       <button id="saveProject" class="secondary">プロジェクト保存</button>
+      <select id="saveImageMode" class="save-mode-select" aria-label="プロジェクト保存時の画像データ設定">
+        <option value="embed">保存: 画像を含める</option>
+        <option value="reference">保存: 画像を含めない</option>
+      </select>
       <input id="loadProject" class="file-input" type="file" accept=".json,.cmproj.json" />
       <label class="file-btn secondary" for="loadProject">プロジェクト読込</label>
       <input id="fileInput" class="file-input" type="file" accept="image/*" multiple webkitdirectory />

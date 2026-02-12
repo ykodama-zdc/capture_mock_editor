@@ -103,6 +103,16 @@ body {
   flex-wrap: wrap;
 }
 
+.save-mode-select {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+}
+
 .file-btn {
   position: relative;
   display: inline-flex;

@@ -1,6 +1,7 @@
 const fileInput = document.getElementById('fileInput');
 const fileInputSingle = document.getElementById('fileInputSingle');
 const saveProjectBtn = document.getElementById('saveProject');
+const saveImageMode = document.getElementById('saveImageMode');
 const loadProjectInput = document.getElementById('loadProject');
 const thumbsEl = document.getElementById('thumbs');
 const imageCountEl = document.getElementById('imageCount');
@@ -1044,9 +1045,7 @@ exportBtn.addEventListener('click', exportHTML);
 
 async function saveProject() {
   if (!state.items.length) return;
-  const includeImages = window.confirm(
-    'プロジェクト保存:\n画像データをJSONに含めますか？\n\nOK: 含める\nキャンセル: 含めない'
-  );
+  const includeImages = saveImageMode?.value !== 'reference';
   const payload = {
     version: 1,
     embeddedImages: includeImages,
