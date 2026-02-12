@@ -1044,12 +1044,17 @@ exportBtn.addEventListener('click', exportHTML);
 
 async function saveProject() {
   if (!state.items.length) return;
+  const includeImages = window.confirm(
+    'プロジェクト保存:\n画像データをJSONに含めますか？\n\nOK: 含める\nキャンセル: 含めない'
+  );
   const payload = {
     version: 1,
+    embeddedImages: includeImages,
     output: { ...state.output },
       items: state.items.map(item => ({
         id: item.id,
         name: item.name,
+        ...(includeImages ? { dataUrl: item.dataUrl } : {}),
         crop: item.crop,
         hotspots: item.hotspots || [],
       })),
