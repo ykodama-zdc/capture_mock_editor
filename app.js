@@ -28,6 +28,9 @@ const hotspotControls = document.getElementById('hotspotControls');
 const centerPanel = document.getElementById('centerPanel');
 const debugHud = document.getElementById('debugHud');
 
+const hotspotCursorSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><defs><filter id="shadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="1" dy="1" stdDeviation="1" flood-color="rgba(0,0,0,0.6)"/></filter></defs><g filter="url(#shadow)" stroke="#ffffff" stroke-width="2" stroke-linecap="round"><line x1="16" y1="4" x2="16" y2="28"/><line x1="4" y1="16" x2="28" y2="16"/></g><circle cx="16" cy="16" r="2" fill="#2dd4bf"/></svg>';
+const HOTSPOT_CURSOR = `url("data:image/svg+xml,${encodeURIComponent(hotspotCursorSvg)}") 16 16, crosshair`;
+
 const state = {
   items: [],
   selectedId: null,
@@ -68,6 +71,7 @@ function loadFiles(files) {
     const dataUrl = await fileToDataUrl(file);
     const img = new Image();
     img.onload = () => {
+      const shouldSyncOutput = state.items.length === 0;
       const item = {
         id: crypto.randomUUID(),
         name: file.name,
@@ -82,6 +86,12 @@ function loadFiles(files) {
       state.items.push(item);
       if (!state.selectedId) {
         state.selectedId = item.id;
+      }
+      if (shouldSyncOutput) {
+        state.output.w = item.img.naturalWidth;
+        state.output.h = item.img.naturalHeight;
+        resizeCropCanvas();
+        updatePreviewScale();
       }
       renderThumbs();
       render();
@@ -341,18 +351,53 @@ function hitTestHotspotHandle(mx, my, h) {
   return null;
 }
 
+function drawRoundedRect(ctx, x, y, w, h, radius) {
+  const r = Math.min(radius, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawHotspotLabel(ctx, x, y, text) {
+  const paddingX = 6;
+  const paddingY = 4;
+  const labelHeight = 18;
+  ctx.save();
+  ctx.font = '12px \"IBM Plex Mono\", monospace';
+  ctx.textBaseline = 'middle';
+  const textWidth = ctx.measureText(text).width;
+  const labelWidth = Math.ceil(textWidth) + paddingX * 2;
+  ctx.fillStyle = 'rgba(11, 15, 26, 0.85)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.lineWidth = 1;
+  drawRoundedRect(ctx, x, y, labelWidth, labelHeight, 8);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+  ctx.shadowBlur = 2;
+  ctx.fillText(text, x + paddingX, y + labelHeight / 2);
+  ctx.restore();
+}
+
 function drawHotspots(item) {
   const list = item.hotspots || [];
   previewCtx.save();
-  previewCtx.strokeStyle = 'rgba(255, 122, 89, 0.9)';
   previewCtx.lineWidth = 2;
-  previewCtx.fillStyle = 'rgba(255, 122, 89, 0.2)';
   list.forEach((h, idx) => {
+    previewCtx.fillStyle = 'rgba(255, 122, 89, 0.2)';
+    previewCtx.strokeStyle = 'rgba(255, 122, 89, 0.85)';
     previewCtx.fillRect(h.x, h.y, h.w, h.h);
     previewCtx.strokeRect(h.x, h.y, h.w, h.h);
-    previewCtx.fillStyle = 'rgba(255, 122, 89, 0.85)';
-    previewCtx.font = '12px "IBM Plex Mono", monospace';
-    previewCtx.fillText(`${idx + 1}`, h.x + 6, h.y + 16);
+    drawHotspotLabel(previewCtx, h.x + 8, h.y + 8, `${idx + 1}`);
     const handleSize = 8;
     previewCtx.fillStyle = 'rgba(255, 122, 89, 0.85)';
     getHotspotHandles(h).forEach(p => {
@@ -457,7 +502,7 @@ function updateHotspotCursor(mx, my, item) {
     previewCanvas.style.cursor = 'pointer';
     return;
   }
-  previewCanvas.style.cursor = state.hotspot.mode === 'draw' ? 'crosshair' : 'default';
+  previewCanvas.style.cursor = state.hotspot.mode === 'draw' ? HOTSPOT_CURSOR : 'default';
 }
 
 function updateCropCursor(mx, my, item) {
@@ -640,7 +685,7 @@ function setMode(mode) {
   modeCropBtn.classList.toggle('secondary', !isCrop);
   modeHotspotBtn.classList.toggle('primary', !isCrop);
   modeHotspotBtn.classList.toggle('secondary', isCrop);
-  previewCanvas.style.cursor = state.hotspot.mode === 'draw' ? 'crosshair' : 'default';
+  previewCanvas.style.cursor = state.hotspot.mode === 'draw' ? HOTSPOT_CURSOR : 'default';
   render();
 }
 
@@ -720,7 +765,7 @@ previewCanvas.addEventListener('mouseleave', () => {
 window.addEventListener('mouseup', () => {
   const item = getSelected();
   if (!item || state.mode !== 'hotspot') return;
-  previewCanvas.style.cursor = state.hotspot.mode === 'draw' ? 'crosshair' : 'default';
+  previewCanvas.style.cursor = state.hotspot.mode === 'draw' ? HOTSPOT_CURSOR : 'default';
 
   if (state.hotspot.edit) {
     const edit = state.hotspot.edit;
@@ -798,8 +843,8 @@ bgColorInput.addEventListener('change', () => {
 
 async function exportHTML() {
   if (!state.items.length) return;
-  const exportW = 1920;
-  const exportH = 1080;
+  const exportW = state.output.w || 1920;
+  const exportH = state.output.h || 1080;
   const bg = state.output.bg;
   const scaleX = exportW / state.output.w;
   const scaleY = exportH / state.output.h;
@@ -1094,6 +1139,8 @@ async function loadProjectFile(file) {
   state.items = [];
   state.selectedId = null;
   if (data.output) {
+    state.output.w = data.output.w || state.output.w;
+    state.output.h = data.output.h || state.output.h;
     state.output.bg = data.output.bg || state.output.bg;
     bgColorInput.value = state.output.bg;
   }
@@ -1119,6 +1166,10 @@ async function loadProjectFile(file) {
     };
     state.items.push(item);
     if (!state.selectedId) state.selectedId = item.id;
+  }
+  if ((!data.output?.w || !data.output?.h) && state.items[0]) {
+    state.output.w = state.items[0].img.naturalWidth;
+    state.output.h = state.items[0].img.naturalHeight;
   }
   renderThumbs();
   resizeCropCanvas();
