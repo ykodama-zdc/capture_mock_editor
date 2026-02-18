@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Capture Mock Editor | 操作マニュアル</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Space Grotesk', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: radial-gradient(1200px 800px at 10% 10%, #1b2440, #0b0f1a 60%);
+      color: #f2f5ff;
+      min-height: 100vh;
+      padding: 32px 20px 60px;
+    }
+    header {
+      max-width: 960px;
+      margin: 0 auto 32px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(45, 212, 191, 0.12);
+      color: #2dd4bf;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 12px 0 8px;
+      font-size: 32px;
+    }
+    p.lead {
+      margin: 0;
+      color: #a2abc8;
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      display: grid;
+      gap: 24px;
+    }
+    section {
+      background: rgba(12, 17, 28, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+    section h2 {
+      margin-top: 0;
+      font-size: 22px;
+    }
+    section h3 {
+      margin-bottom: 8px;
+      margin-top: 24px;
+      font-size: 16px;
+      color: #8fd7ff;
+    }
+    ol, ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #d7def3;
+    }
+    .steps {
+      display: grid;
+      gap: 16px;
+    }
+    .steps li {
+      margin-bottom: 8px;
+    }
+    .grid-two {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .callout {
+      border-left: 4px solid #ffb45b;
+      padding-left: 16px;
+      color: #ffcfa1;
+    }
+    a {
+      color: #7dd3fc;
+    }
+    .table-like {
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .table-like div {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .table-like div:last-child { border-bottom: none; }
+    .table-like strong {
+      color: #9dd7ff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="badge">Capture Mock Editor</div>
+    <h1>操作マニュアル</h1>
+    <p class="lead">スクリーンショット素材を取り込み、モック UI への配置・遷移設定・書き出しまでを効率化するための手順をまとめています。</p>
+  </header>
+  <main>
+    <section>
+      <h2>基本フロー</h2>
+      <ol class="steps">
+        <li><strong>素材の取り込み</strong> – ヘッダーの「フォルダから取り込み」または「ファイル選択」から PNG/JPEG を複数選択すると、左ペインにサムネイルが並びます。ドラッグ＆ドロップで並び替えや削除が可能です。</li>
+        <li><strong>クロップモード</strong> – 中央ペインの「トリミング」モードで表示範囲を調整します。白枠をドラッグして位置やサイズを変更、リセットボタンで元に戻せます。</li>
+        <li><strong>プレビュー確認</strong> – 右下のプレビューは書き出し解像度でレンダリングされ、背景色も反映されます。プレビュー領域は自動で縮小表示されます。</li>
+        <li><strong>ホットスポット設定</strong> – 「遷移設定」に切り替え、「クリック領域を追加」でリンク領域を描画します。ラベルのセレクタから遷移先画面を指定できます。</li>
+        <li><strong>保存・書き出し</strong> – 「プロジェクト保存」で途中状態を JSON として保存し、「HTMLを書き出し」でスタンドアロンのモックビューアを生成します。</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>取り込みと管理</h2>
+      <div class="table-like">
+        <div>
+          <strong>対応形式</strong>
+          <span>PNG / JPEG / WebP。フォルダ指定（webkitdirectory）にも対応しています。</span>
+        </div>
+        <div>
+          <strong>並び替え</strong>
+          <span>サムネイルをドラッグして順番を変更できます。順番は書き出し順やホットスポットのターゲット候補にも反映されます。</span>
+        </div>
+        <div>
+          <strong>削除</strong>
+          <span>各サムネイル右上の × ボタンで素材を削除します。選択中の素材を削除すると、リスト先頭が自動選択されます。</span>
+        </div>
+      </div>
+      <p class="callout">ヒント: 最初に読み込んだ画像の解像度が基準値として使用され、後続の画像も同じ出力サイズでレンダリングされます。異なる解像度の画像を混在させる場合は、最も高解像度の素材から取り込むと画質を保ちやすくなります。</p>
+    </section>
+
+    <section>
+      <h2>クロップモード</h2>
+      <div class="grid-two">
+        <div>
+          <h3>操作</h3>
+          <ul>
+            <li>白枠の内部ドラッグで移動、四隅ハンドルでリサイズ。</li>
+            <li>「全体に戻す」で素材全体にリセット。</li>
+            <li>「この範囲を全画像に適用」で現在の比率を他素材に一括適用。</li>
+          </ul>
+        </div>
+        <div>
+          <h3>背景色と解像度</h3>
+          <ul>
+            <li>背景色は右ペインのカラーピッカーで設定し、プレビューと書き出し両方に適用。</li>
+            <li>書き出し解像度は最初に読み込んだ素材に追従します。必要に応じて高解像度の画像を先に読み込んでください。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ホットスポットモード</h2>
+      <div class="grid-two">
+        <div>
+          <h3>新規作成</h3>
+          <ul>
+            <li>「クリック領域を追加」を押すとカーソルがクロスヘアになります。プレビュー上でドラッグして領域を作成。</li>
+            <li>最小サイズ 8px を下回る矩形は無効化されます。</li>
+          </ul>
+        </div>
+        <div>
+          <h3>編集と遷移</h3>
+          <ul>
+            <li>領域をクリックするとドラッグ移動、ハンドルでリサイズできます。</li>
+            <li>ホットスポット一覧のドロップダウンで遷移先を指定、削除ボタンで除去。</li>
+            <li>プレビュー上の番号付きバッジをクリックすると、設定した遷移先にジャンプして確認できます。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>プロジェクト保存と書き出し</h2>
+      <ul>
+        <li><strong>保存モード</strong> – 「保存: 画像を含める」を選ぶと JSON 内に Base64 を埋め込みます。含めない場合は、後で同名ファイルを指定すると再解決されます。</li>
+        <li><strong>プロジェクト読込</strong> – JSON を選択すると、クロップやホットスポット設定を復元します。画像が見つからない場合はフォルダ選択ダイアログで再指定してください。</li>
+        <li><strong>HTML 書き出し</strong> – すべての素材を固定サイズ PNG にレンダリングし、遷移可能なミニビューアを生成します。生成ファイルはオフラインで動作します。</li>
+      </ul>
+      <p class="callout">書き出し前にプレビューでホットスポット順序や背景色を確認すると、実際のレビュー時の手戻りを減らせます。</p>
+    </section>
+
+    <section>
+      <h2>トラブルシュート</h2>
+      <ul>
+        <li>プレビューがぼける場合は、元画像を高解像度で取り込み、クロップ時に極端な拡大を避けてください。</li>
+        <li>ホットスポットの番号が見づらい場合はズームレベルを調整し、必要なら領域を大きめに設定します。</li>
+        <li>ブラウザのファイル保存ダイアログをキャンセルした場合は、再度ボタンを押してやり直してください。</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
