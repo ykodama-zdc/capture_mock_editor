@@ -351,40 +351,26 @@ function hitTestHotspotHandle(mx, my, h) {
   return null;
 }
 
-function drawRoundedRect(ctx, x, y, w, h, radius) {
-  const r = Math.min(radius, w / 2, h / 2);
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
 function drawHotspotLabel(ctx, x, y, text) {
-  const paddingX = 6;
-  const paddingY = 4;
-  const labelHeight = 18;
+  const diameter = 34;
+  const radius = diameter / 2;
   ctx.save();
-  ctx.font = '12px \"IBM Plex Mono\", monospace';
+  ctx.font = '600 16px \"IBM Plex Mono\", monospace';
+  ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const textWidth = ctx.measureText(text).width;
-  const labelWidth = Math.ceil(textWidth) + paddingX * 2;
-  ctx.fillStyle = 'rgba(11, 15, 26, 0.85)';
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-  ctx.lineWidth = 1;
-  drawRoundedRect(ctx, x, y, labelWidth, labelHeight, 8);
+  ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(11, 15, 26, 0.92)';
   ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
   ctx.stroke();
+  ctx.shadowBlur = 0;
   ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-  ctx.shadowBlur = 2;
-  ctx.fillText(text, x + paddingX, y + labelHeight / 2);
+  ctx.fillText(text, x + radius, y + radius);
   ctx.restore();
 }
 
