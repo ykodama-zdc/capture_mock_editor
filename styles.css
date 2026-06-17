@@ -99,8 +99,21 @@ body {
 .actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  overflow-x: auto;
+}
+
+.action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  padding: 6px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .actions .help-link {
@@ -184,6 +197,8 @@ button {
   grid-template-columns: 280px minmax(0, 1fr) 320px;
   gap: 20px;
   padding: 0 24px 32px 24px;
+  height: calc(100vh - 140px);
+  min-height: 0;
 }
 
 .panel {
@@ -194,18 +209,20 @@ button {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  max-height: calc(100vh - 140px);
+  height: 100%;
+  max-height: 100%;
   backdrop-filter: blur(10px);
 }
 
 .panel.left {
   overflow: hidden;
-  height: 70vh;
-  max-height: 70vh;
-  min-height: 70vh;
 }
 
 .panel.center {
+  overflow: hidden;
+}
+
+.panel.right {
   overflow: hidden;
 }
 
@@ -381,7 +398,7 @@ button {
 }
 
 .stage-hidden {
-  display: none;
+  display: none !important;
 }
 
 .hint {
@@ -414,6 +431,18 @@ button {
   font-family: 'IBM Plex Mono', monospace;
 }
 
+.readonly-value {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  background: var(--panel-2);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .field.row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -438,9 +467,8 @@ button {
 }
 
 .preview-stage canvas {
-  width: auto;
+  width: 100%;
   height: 100%;
-  max-width: 100%;
   display: block;
 }
 
@@ -456,8 +484,11 @@ button {
 
 .hotspot-controls {
   margin-top: 16px;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+  min-height: 0;
+  flex: 1;
 }
 
 .hotspot-header {
@@ -474,21 +505,82 @@ button {
 .hotspot-list {
   display: grid;
   gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  flex: 1;
+  align-content: start;
 }
 
 .hotspot-item {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 8px;
-  align-items: center;
+  gap: 10px;
   background: var(--panel-2);
   border: 1px solid var(--stroke);
   border-radius: 12px;
-  padding: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.hotspot-item:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.hotspot-item.active {
+  border-color: rgba(45, 212, 191, 0.72);
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.36) inset;
+  background: rgba(20, 37, 45, 0.92);
+}
+
+.hotspot-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .hotspot-label {
   font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hotspot-target-card {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hotspot-target-card.is-empty {
+  grid-template-columns: 1fr;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hotspot-target-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.hotspot-target-info {
+  min-width: 0;
+}
+
+.hotspot-target-name {
+  font-size: 12px;
+  line-height: 1.35;
+  word-break: break-all;
+}
+
+.hotspot-target-meta {
+  margin-top: 4px;
   font-size: 11px;
   color: var(--muted);
 }
@@ -513,9 +605,11 @@ button {
 @media (max-width: 1100px) {
   .workspace {
     grid-template-columns: 1fr;
+    height: auto;
   }
   .panel {
     min-height: auto;
     max-height: none;
+    height: auto;
   }
 }

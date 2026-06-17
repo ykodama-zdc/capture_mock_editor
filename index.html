@@ -20,19 +20,30 @@
       </div>
     </div>
     <div class="actions">
-      <button id="saveProject" class="secondary">プロジェクト保存</button>
-      <select id="saveImageMode" class="save-mode-select" aria-label="プロジェクト保存時の画像データ設定">
-        <option value="embed">保存: 画像を含める</option>
-        <option value="reference">保存: 画像を含めない</option>
-      </select>
-      <input id="loadProject" class="file-input" type="file" accept=".json,.cmproj.json" />
-      <label class="file-btn secondary" for="loadProject">プロジェクト読込</label>
-      <input id="fileInput" class="file-input" type="file" accept="image/*" multiple webkitdirectory />
-      <label class="file-btn" for="fileInput">フォルダから取り込み</label>
-      <input id="fileInputSingle" class="file-input" type="file" accept="image/*" multiple />
-      <label class="file-btn secondary" for="fileInputSingle">ファイル選択</label>
-      <button id="exportBtn" class="primary">HTMLを書き出し</button>
-      <a class="secondary help-link" href="help.html" target="_blank" rel="noopener">操作マニュアル</a>
+      <div class="action-group">
+        <input id="fileInput" class="file-input" type="file" accept="image/*" multiple webkitdirectory />
+        <label class="file-btn" for="fileInput">フォルダから取り込み</label>
+        <input id="fileInputSingle" class="file-input" type="file" accept="image/*" multiple />
+        <label class="file-btn secondary" for="fileInputSingle">ファイル選択</label>
+        <input id="loadProject" class="file-input" type="file" accept=".json,.cmproj.json" />
+        <button id="loadProjectBtn" class="file-btn secondary" type="button">プロジェクト読込</button>
+      </div>
+      <div class="action-group">
+        <button id="saveProject" class="secondary">プロジェクト保存</button>
+        <select id="saveImageMode" class="save-mode-select" aria-label="プロジェクト保存時の画像データ設定">
+          <option value="embed">画像を含める</option>
+          <option value="reference">画像を含めない</option>
+        </select>
+      </div>
+      <div class="action-group">
+        <button id="saveCroppedImage" class="secondary">トリミング画像を一括保存</button>
+      </div>
+      <div class="action-group">
+        <button id="exportBtn" class="primary">HTMLを書き出し</button>
+      </div>
+      <div class="action-group">
+        <a class="secondary help-link" href="help.html" target="_blank" rel="noopener">操作マニュアル</a>
+      </div>
     </div>
   </header>
 
@@ -53,6 +64,7 @@
       <div class="mode-toggle">
         <button id="modeCrop" class="primary">トリミング</button>
         <button id="modeHotspot" class="secondary">遷移設定</button>
+        <button id="modeMask" class="secondary">マスク</button>
       </div>
       <div class="stage-stack">
         <div class="crop-stage" id="cropStage">
@@ -69,11 +81,39 @@
     </section>
 
     <section class="panel right">
-      <div class="panel-header">
-        <div class="panel-title">Settings</div>
-        <div class="panel-meta">作業補助</div>
+      <div class="panel-header" id="rightPanelHeader">
+        <div class="panel-title" id="rightPanelTitle">Settings</div>
+        <div class="panel-meta" id="rightPanelMeta">作業補助</div>
       </div>
       <div class="crop-controls" id="cropControls">
+        <div class="field">
+          <label>現在の選択範囲</label>
+          <div class="readonly-value" id="cropSizeInfo">-</div>
+        </div>
+        <div class="field">
+          <label for="outputPreset">出力サイズ</label>
+          <select id="outputPreset">
+            <option value="selection">選択範囲を維持</option>
+            <option value="1920x1080">1920 x 1080</option>
+            <option value="1600x900">1600 x 900</option>
+            <option value="1366x768">1366 x 768</option>
+            <option value="1280x720">1280 x 720</option>
+            <option value="1080x1920">1080 x 1920</option>
+            <option value="768x1024">768 x 1024</option>
+            <option value="390x844">390 x 844</option>
+            <option value="custom">カスタム</option>
+          </select>
+        </div>
+        <div class="field row stage-hidden" id="customOutputFields">
+          <div>
+            <label for="outputWidth">出力幅</label>
+            <input id="outputWidth" type="number" min="1" step="1" value="1920" />
+          </div>
+          <div>
+            <label for="outputHeight">出力高さ</label>
+            <input id="outputHeight" type="number" min="1" step="1" value="1080" />
+          </div>
+        </div>
         <div class="field">
           <label>背景色 (レターボックス)</label>
           <input id="bgColor" type="color" value="#0b0f1a" />
@@ -89,7 +129,15 @@
         <div class="hotspot-hint" id="hotspotHint">追加ボタンを押してからプレビュー上でドラッグ</div>
         <div id="hotspotList" class="hotspot-list"></div>
       </div>
-      <div class="export-note">
+      <div class="hotspot-controls stage-hidden" id="maskControls">
+        <div class="hotspot-header">
+          <div class="panel-title">Masks</div>
+          <button id="addMask" class="secondary">マスクを追加</button>
+        </div>
+        <div class="hotspot-hint" id="maskHint">追加ボタンを押してからプレビュー上でドラッグ</div>
+        <div id="maskList" class="hotspot-list"></div>
+      </div>
+      <div class="export-note" id="exportNote">
         書き出し時は全画像を固定サイズに揃えてHTMLに埋め込みます。
       </div>
     </section>
